@@ -17,8 +17,6 @@ const LoginUI = () => {
       });
     } catch (error) {
       console.error("Error during GitHub sign-in:", error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -47,7 +45,7 @@ const LoginUI = () => {
             className="w-full bg-white text-black hover:bg-gray-200 font-semibold py-6 rounded-lg flex items-center justify-center gap-3 transition-colors"
           >
             <Github size={20} />
-            GitHub
+            {isLoading ? "Signing in..." : "Continue with GitHub"}
           </Button>
         </div>
 
