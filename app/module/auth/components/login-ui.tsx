@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Github } from "lucide-react";
+import Image from "next/image";
 
 const LoginUI = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -25,8 +26,15 @@ const LoginUI = () => {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="mb-8">
-          <div className="w-12 h-12 bg-black border-2 border-white rounded-lg flex items-center justify-center">
-            <span className="text-lg font-bold text-white">CC</span>
+          <div className="w-24 h-24 bg-black border-2 border-white rounded-lg flex items-center justify-center">
+            <Image
+              src="/cc_logo.png"
+              alt="CodeCritic Logo"
+              width={96}
+              height={96}
+              className="object-contain"
+              priority
+            />
           </div>
         </div>
 

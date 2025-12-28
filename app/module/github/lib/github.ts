@@ -43,7 +43,7 @@ export const getGithubToken = async (): Promise<string | null> => {
  * @returns Contribution data
  */
 export const fetchUserContribution = async (
-  accessToken: string,
+  accessToken: string | null,
   username: string
 ) => {
   const octokit = new Octokit({
@@ -75,6 +75,7 @@ export const fetchUserContribution = async (
                 contributionCalendar: {
                     totalContributions: number;
                     weeks: {
+                        flatMap(arg0: (week: any) => any): unknown;
                         forEach(arg0: (week: any) => void): unknown;
                         contributionDays: {
                             date: string | Date;
