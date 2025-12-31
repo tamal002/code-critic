@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // allowedDevOrigins: [
+  //   "http://localhost:3000",
+  //   "http://10.56.177.184:3000",
+  //   "https://mannered-matilda-incongrously.ngrok-free.dev",
+  // ],
 };
 
 export default nextConfig;

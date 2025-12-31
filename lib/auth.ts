@@ -8,6 +8,12 @@ export const auth = betterAuth({
         provider: "postgresql", 
     }),
 
+  //   baseURL: process.env.BETTER_AUTH_URL,
+  //   trustedOrigins: [
+  //   "http://localhost:3000",
+  //   "https://mannered-matilda-incongrously.ngrok-free.dev",
+  // ],
+
     socialProviders: { 
     github: { 
       clientId: process.env.GITHUB_CLIENT_ID as string, 

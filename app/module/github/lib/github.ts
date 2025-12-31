@@ -96,3 +96,56 @@ export const fetchUserContribution = async (
         throw error;
     }
 }
+
+
+export const getRespositories = async (page:number = 1, perPage:number = 10) => {
+  const accessToken = await getGithubToken();
+  const octokit = new Octokit({
+    auth: accessToken || undefined,
+  }); 
+  const {data} = await octokit.rest.repos.listForAuthenticatedUser({
+    sort: "updated",
+    order: "desc",
+    visibility: "all",
+    page: page,
+    per_page: perPage,
+  });
+
+  return data;
+}
+
+// Create a webhook for a given repository
+export const createWebhook = async (owner: string, repo: string) => {
+  const accessToken = await getGithubToken();
+  if (!accessToken) {
+    throw new Error("GitHub access token not found");
+  }
+  const octokit = new Octokit({
+    auth: accessToken,
+  });
+
+  // Add webhook creation logic here
+  const webhookUrl = `${process.env.NEXT_PUBLIC_APP_BASE_URL}/api/webhooks/github`;
+
+  // Check if webhook already exists
+  const {data: hooks} = await octokit.rest.repos.listWebhooks({
+    owner,
+    repo,
+  });
+  const existingHook = hooks.find(hook => hook.config.url === webhookUrl);
+  if (existingHook) {
+    return existingHook;
+  }
+  
+  // Create new webhook
+  const {data} =  await octokit.rest.repos.createWebhook({
+    owner,
+    repo,
+    config: {
+      url: webhookUrl,
+      content_type: "json"
+    },
+    events: ["pull_request"],
+  });
+  return data;
+}

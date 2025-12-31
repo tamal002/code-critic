@@ -372,3 +372,231 @@ export const getMonthlyActivity = async () => {
     return [];
   }
 };
+
+
+// overview of data formation flow
+/*
+
+  1️⃣ getDashboardStats — Data Formation Flow
+Step 1: Session resolution
+const session = await auth.api.getSession(...)
+
+
+Result
+
+session = {
+  user: {
+    id: "user_123",
+    email: "dev@example.com"
+  }
+}
+
+
+👉 Used only to authorize the request.
+
+Step 2: GitHub token from DB
+const githubToken = await getGithubToken();
+
+
+Result
+
+githubToken = "gho_xxxxxxxxxxxxxxxxx"
+
+
+👉 Used for all GitHub API calls.
+
+Step 3: Authenticated GitHub user
+const { data: user } = await octokit.rest.users.getAuthenticated();
+
+
+Result
+
+user = {
+  login: "octocat",
+  id: 583231,
+  avatar_url: "...",
+  ...
+}
+
+
+Extracted:
+
+githubUsername = "octocat"
+
+Step 4: Contribution calendar (GraphQL)
+const calendar = await fetchUserContribution(token, username);
+
+
+Raw shape
+
+calendar = {
+  totalContributions: 412,
+  weeks: [
+    {
+      contributionDays: [
+        {
+          date: "2025-01-03",
+          contributionCount: 4,
+          color: "#239a3b"
+        },
+        {
+          date: "2025-01-04",
+          contributionCount: 0,
+          color: "#ebedf0"
+        }
+      ]
+    },
+    ...
+  ]
+}
+
+Step 5: Total commits
+const totalCommits = calendar.totalContributions;
+
+
+Result
+
+totalCommits = 412
+
+Step 6: Pull Request search
+const { data: prs } = await octokit.rest.search.issuesAndPullRequests(...)
+
+
+Result
+
+prs = {
+  total_count: 87,
+  items: [  not used here  ] // not used here
+}
+
+
+Extracted:
+
+totalPRs = 87
+
+Step 7: Final dashboard object
+return {
+  totalRepos: 30,
+  totalCommits: 412,
+  totalPRs: 87,
+  totalReviews: 38
+};
+
+
+📊 Final Shape
+
+{
+  totalRepos: number,
+  totalCommits: number,
+  totalPRs: number,
+  totalReviews: number
+}
+
+2️⃣ getMonthlyActivity — Data Formation Flow
+
+This function is more interesting because data is incrementally aggregated.
+
+Step 1: Initialize last 6 months
+monthlyActivity = {
+  April:    { commits: 0, prs: 0, reviews: 0 },
+  May:      { commits: 0, prs: 0, reviews: 0 },
+  June:     { commits: 0, prs: 0, reviews: 0 },
+  July:     { commits: 0, prs: 0, reviews: 0 },
+  August:   { commits: 0, prs: 0, reviews: 0 },
+  September:{ commits: 0, prs: 0, reviews: 0 }
+}
+
+
+🧱 This is your aggregation bucket.
+
+Step 2: Aggregate commits from calendar
+
+From calendar:
+
+{
+  date: "2025-07-12",
+  contributionCount: 3
+}
+
+
+Processing logic:
+
+monthKey = "July"
+monthlyActivity["July"].commits += 3;
+
+After all weeks processed:
+monthlyActivity = {
+  April:    { commits: 12, prs: 0, reviews: 0 },
+  May:      { commits: 34, prs: 0, reviews: 0 },
+  June:     { commits: 29, prs: 0, reviews: 0 },
+  July:     { commits: 41, prs: 0, reviews: 0 },
+  August:   { commits: 19, prs: 0, reviews: 0 },
+  September:{ commits: 7,  prs: 0, reviews: 0 }
+}
+
+Step 3: Sample review generation (placeholder)
+
+Generated:
+
+reviews = [
+  { createdAt: 2025-07-02 },
+  { createdAt: 2025-07-14 },
+  { createdAt: 2025-05-09 },
+  ...
+]
+
+
+Aggregation:
+
+monthlyActivity["July"].reviews += 1;
+
+After reviews:
+monthlyActivity = {
+  April:    { commits: 12, prs: 0, reviews: 6 },
+  May:      { commits: 34, prs: 0, reviews: 9 },
+  June:     { commits: 29, prs: 0, reviews: 7 },
+  July:     { commits: 41, prs: 0, reviews: 11 },
+  August:   { commits: 19, prs: 0, reviews: 8 },
+  September:{ commits: 7,  prs: 0, reviews: 4 }
+}
+
+Step 4: Pull Requests (search API)
+
+Each PR:
+
+{
+  created_at: "2025-06-18T12:34:56Z"
+}
+
+
+Aggregation:
+
+monthlyActivity["June"].prs += 1;
+
+After PRs:
+monthlyActivity = {
+  April:    { commits: 12, prs: 2, reviews: 6 },
+  May:      { commits: 34, prs: 5, reviews: 9 },
+  June:     { commits: 29, prs: 7, reviews: 7 },
+  July:     { commits: 41, prs: 9, reviews: 11 },
+  August:   { commits: 19, prs: 4, reviews: 8 },
+  September:{ commits: 7,  prs: 1, reviews: 4 }
+}
+
+Step 5: Final output formatting
+Object.keys(monthlyActivity).map(...)
+
+Final API Response
+[
+  { name: "April", commits: 12, prs: 2, reviews: 6 },
+  { name: "May", commits: 34, prs: 5, reviews: 9 },
+  { name: "June", commits: 29, prs: 7, reviews: 7 },
+  { name: "July", commits: 41, prs: 9, reviews: 11 },
+  { name: "August", commits: 19, prs: 4, reviews: 8 },
+  { name: "September", commits: 7, prs: 1, reviews: 4 }
+]
+
+
+📈 Perfect for charts / dashboards
+
+ */
