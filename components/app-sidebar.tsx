@@ -26,6 +26,7 @@ import {
 } from "lucide-react"
 
 import {useSession} from "@/lib/auth-client";
+import { is } from "date-fns/locale"
 
 type AppSidebarProps = {
   user?: {
@@ -40,6 +41,9 @@ const AppSidebar: React.FC<AppSidebarProps> = () => {
     const { data: session } = useSession();
     // const [isLoading, setIsLoading] = React.useState(false);
     // Use session data directly for user info
+
+    const [active, setActive] = React.useState("dashboard");
+
     const user = {
         name: session?.user?.name,
         email: session?.user?.email,
@@ -64,7 +68,7 @@ const AppSidebar: React.FC<AppSidebarProps> = () => {
             <SidebarGroupLabel>Menu</SidebarGroupLabel>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive>
+                <SidebarMenuButton asChild isActive={active === "dashboard"} onClick={()=>setActive("dashboard")}>
                   <Link href="/dashboard">
                     <LayoutDashboard />
                     <span>Dashboard</span>
@@ -73,17 +77,17 @@ const AppSidebar: React.FC<AppSidebarProps> = () => {
               </SidebarMenuItem>
 
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link href="/repository">
+                <SidebarMenuButton asChild isActive={active === "repository"} onClick={()=>setActive("repository")}>
+                  <Link href="/dashboard/repository">
                     <FolderGit2 />
-                    <span>Repository</span>
+                    <span >Repository</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link href="/reviews">
+                <SidebarMenuButton asChild isActive={active === "reviews"} onClick={()=>setActive("reviews")}>
+                  <Link href="/dashboard/reviews">
                     <MessageSquare />
                     <span>Reviews</span>
                   </Link>
@@ -91,8 +95,8 @@ const AppSidebar: React.FC<AppSidebarProps> = () => {
               </SidebarMenuItem>
 
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link href="/subscription">
+                <SidebarMenuButton asChild isActive={active === "subscription"} onClick={()=>setActive("subscription")}>
+                  <Link href="/dashboard/subscription">
                     <CreditCard />
                     <span>Subscription</span>
                   </Link>
@@ -100,8 +104,8 @@ const AppSidebar: React.FC<AppSidebarProps> = () => {
               </SidebarMenuItem>
 
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link href="/settings">
+                <SidebarMenuButton asChild isActive={active === "settings"} onClick={()=>setActive("settings")}>
+                  <Link href="/dashboard/settings">
                     <Settings />
                     <span>Settings</span>
                   </Link>

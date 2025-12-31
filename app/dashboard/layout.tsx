@@ -10,6 +10,7 @@ import ThemeToggle from "@/components/theme-toggle";
 import LogoutButton from "../module/auth/components/logoutButton";
 import { requireAuth } from "../module/auth/utils/auth-utils";
 import Image from "next/image";
+import { Toaster } from "@/components/ui/sonner";
 
 const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
   await requireAuth();
@@ -28,7 +29,7 @@ const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
           </div>
           <LogoutButton />
         </header>
-        <div className="p-4">{children}</div>
+        <div className="p-4">{children}<Toaster/></div>
       </SidebarInset>
     </SidebarProvider>
   );
