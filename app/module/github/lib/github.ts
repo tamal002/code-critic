@@ -1,4 +1,3 @@
-
 "use server";
 
 import { Octokit } from "octokit";
@@ -35,11 +34,10 @@ export const getGithubToken = async (): Promise<string | null> => {
   return account.accessToken;
 };
 
-
 /**
  * Fetch user contribution data from GitHub GraphQL API
- * @param accessToken 
- * @param username 
+ * @param accessToken
+ * @param username
  * @returns Contribution data
  */
 export const fetchUserContribution = async (
@@ -69,41 +67,45 @@ export const fetchUserContribution = async (
     }
     `;
 
-    interface ContributionData {
-        user: {
-            contributionsCollection: {
-                contributionCalendar: {
-                    totalContributions: number;
-                    weeks: {
-                        flatMap(arg0: (week: any) => any): unknown;
-                        forEach(arg0: (week: any) => void): unknown;
-                        contributionDays: {
-                            date: string | Date;
-                            contributionCount: number;
-                            color: string;
-                        };
-                    };    
-                };
+  interface ContributionData {
+    user: {
+      contributionsCollection: {
+        contributionCalendar: {
+          totalContributions: number;
+          weeks: {
+            flatMap(arg0: (week: any) => any): unknown;
+            forEach(arg0: (week: any) => void): unknown;
+            contributionDays: {
+              date: string | Date;
+              contributionCount: number;
+              color: string;
             };
-        }
-    }
+          };
+        };
+      };
+    };
+  }
 
-    try {
-        const response : ContributionData = await octokit.graphql(query, { username });
-        return response.user.contributionsCollection.contributionCalendar;
-    } catch (error) {
-        console.error("Error at fetchUserContribution:", error);
-        throw error;
-    }
-}
+  try {
+    const response: ContributionData = await octokit.graphql(query, {
+      username,
+    });
+    return response.user.contributionsCollection.contributionCalendar;
+  } catch (error) {
+    console.error("Error at fetchUserContribution:", error);
+    throw error;
+  }
+};
 
-
-export const getRespositories = async (page:number = 1, perPage:number = 10) => {
+export const getRespositories = async (
+  page: number = 1,
+  perPage: number = 10
+) => {
   const accessToken = await getGithubToken();
   const octokit = new Octokit({
     auth: accessToken || undefined,
-  }); 
-  const {data} = await octokit.rest.repos.listForAuthenticatedUser({
+  });
+  const { data } = await octokit.rest.repos.listForAuthenticatedUser({
     sort: "updated",
     order: "desc",
     visibility: "all",
@@ -112,7 +114,7 @@ export const getRespositories = async (page:number = 1, perPage:number = 10) => 
   });
 
   return data;
-}
+};
 
 // Create a webhook for a given repository
 export const createWebhook = async (owner: string, repo: string) => {
@@ -128,24 +130,57 @@ export const createWebhook = async (owner: string, repo: string) => {
   const webhookUrl = `${process.env.NEXT_PUBLIC_APP_BASE_URL}/api/webhooks/github`;
 
   // Check if webhook already exists
-  const {data: hooks} = await octokit.rest.repos.listWebhooks({
+  const { data: hooks } = await octokit.rest.repos.listWebhooks({
     owner,
     repo,
   });
-  const existingHook = hooks.find(hook => hook.config.url === webhookUrl);
+  const existingHook = hooks.find((hook) => hook.config.url === webhookUrl);
   if (existingHook) {
     return existingHook;
   }
-  
+
   // Create new webhook
-  const {data} =  await octokit.rest.repos.createWebhook({
+  const { data } = await octokit.rest.repos.createWebhook({
     owner,
     repo,
     config: {
       url: webhookUrl,
-      content_type: "json"
+      content_type: "json",
     },
     events: ["pull_request"],
   });
   return data;
-}
+};
+
+// Delete a webhook from a given repository
+export const deleteWebhook = async (owner: string, repo: string) => {
+  const accessToken = await getGithubToken();
+  if (!accessToken) {
+    throw new Error("GitHub access token not found");
+  }
+
+  // Initialize Octokit with the access token
+  const octokit = new Octokit({
+    auth: accessToken,
+  });
+  const webhookUrl = `${process.env.NEXT_PUBLIC_APP_BASE_URL}/api/webhooks/github`;
+
+  // listing existing webhooks to find the one to delete
+  const { data: hooks } = await octokit.rest.repos.listWebhooks({
+    owner,
+    repo,
+  });
+
+  // Find the webhook with the matching URL
+  const hookToDelete = hooks.find((hook) => hook.config.url === webhookUrl);
+
+  // Delete the webhook
+  if (hookToDelete) {
+    await octokit.rest.repos.deleteWebhook({
+      owner,
+      repo,
+      hook_id: hookToDelete.id,
+    });
+    return true;
+  } else return false;
+};

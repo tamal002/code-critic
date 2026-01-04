@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   //   "http://10.56.177.184:3000",
   //   "https://mannered-matilda-incongrously.ngrok-free.dev",
   // ],
+  cacheComponents: true,
 };
 
 export default nextConfig;
