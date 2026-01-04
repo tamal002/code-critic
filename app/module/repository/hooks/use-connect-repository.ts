@@ -11,6 +11,7 @@ export const useConnectRepository = () => {
         mutationFn: ({owner, repo, githubId}: {owner: string, repo: string, githubId: bigint}) => connectRepository(owner, repo, githubId),
         onSuccess: () => {
             queryClient.invalidateQueries({queryKey: ['repositories']});
+            queryClient.invalidateQueries({queryKey: ['connected-repositories']});
             toast.success("Repository connected successfully");
         },
         onError: (error) => {

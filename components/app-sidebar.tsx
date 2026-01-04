@@ -132,9 +132,7 @@ const AppSidebar: React.FC<AppSidebarProps> = () => {
               <p className="text-sm font-medium truncate">{user.name}</p>
               <p className="text-xs text-muted-foreground truncate">{user.email}</p>
             </div>
-            <Button size="sm" variant="ghost" asChild>
-              <Link href="/settings">Profile</Link>
-            </Button>
+            
           </div>
         </SidebarFooter>
       </Sidebar>
