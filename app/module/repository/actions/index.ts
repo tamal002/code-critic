@@ -5,6 +5,7 @@ import {auth} from "@/lib/auth";
 import {headers} from "next/headers";
 import { getRespositories } from "../../github/lib/github";
 import { createWebhook } from "../../github/lib/github";
+import { inngestClient } from "@/inngest/client";
 
 
 // Fetch repositories with connection status
@@ -73,7 +74,21 @@ export const connectRepository = async (owner: string, repo: string, githubId: b
 
     // TODO:  INFUTURE JUST INCREMENT THE CONNECTED REPO COUNT FOR THE USAGE TRACKING
     
-    // TODO: TRIGGER REPOSITORY INDEXING FOR RAG (FIRE AND FORGET)
+    // DONE: TRIGGER REPOSITORY INDEXING FOR RAG (FIRE AND FORGET)
+    try {
+        await inngestClient.send(
+            {
+                name: "repository/connected",
+                data: {
+                    owner,
+                    repo,
+                    userId: session.user.id,
+                }
+            }
+        )
+    } catch (error) {
+        console.error("Failed to send inngest event:", error);
+    }
 
     return webhook;
 }

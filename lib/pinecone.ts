@@ -9,4 +9,4 @@ export const pineconeClient = new Pinecone({
 
 
 // Access a specific Pinecone index
-export const pineconeIndex = pineconeClient.Index("code-critic-vector-embedding-v1");
+export const pineconeIndex = pineconeClient.Index("code-critic-ai");
