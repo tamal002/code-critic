@@ -184,3 +184,54 @@ export const deleteWebhook = async (owner: string, repo: string) => {
     return true;
   } else return false;
 };
+
+
+export const getRepoFileContent = async (accessToken: string, owner: string, repo: string, path: string = "") : Promise<{path: string, content: string}[]> => {
+  const octokit = new Octokit({
+    auth: accessToken,
+  });
+
+  // Fetch file or directory content from the repository
+  const { data } = await octokit.rest.repos.getContent({
+    owner,
+    repo,
+    path,
+  });
+
+  // File: single file 
+  if(!Array.isArray(data)) {
+    if (data.type === "file" && data.content) {
+      const fileContent = Buffer.from(data.content, "base64").toString("utf-8");
+      return [{ path: data.path, content: fileContent }];
+    } else return [];
+   } 
+
+
+  // Directory: iterate through items
+  let files: {path: string, content: string}[] = [];
+  for(const item of data) {
+    if(item.type === "file"){
+      const { data: fileData } = await octokit.rest.repos.getContent({
+        owner,
+        repo,
+        path: item.path,
+      });
+      
+      if(!Array.isArray(fileData) && fileData.type === "file" && fileData.content) {
+        if(!item.path.match(/\.((png)|(jpg)|(jpeg)|(gif)|(svg)|(pdf)|(mp4)|(mp3)|(wav))$/)){
+          const fileContent = Buffer.from(fileData.content, "base64").toString("utf-8");
+          files.push({ path: item.path, content: fileContent });
+        }
+      }
+    }
+    else{
+      if(item.type === "dir"){
+        const subFiles = await getRepoFileContent(accessToken, owner, repo, item.path);
+        files = files.concat(subFiles);
+      }
+    }
+  }
+
+  return files;
+  // throw new Error("File content not found");
+}

@@ -1,13 +1,13 @@
 import { serve } from "inngest/next";
-import { inngest } from "../../../inngest/client";
-import { helloWorld } from "../../../inngest/functions/index";
+import { inngestClient } from "../../../inngest/client";
+import { indexRepository } from "../../../inngest/functions/index";
 
-// Create an API that serves zero functions
+// Create an API that serves functions
 export const { GET, POST, PUT } = serve({
-  client: inngest,
+  client: inngestClient,
   functions: [
     
     /* all required functions */
-    helloWorld,
+    indexRepository,
   ],
 });
