@@ -219,20 +219,20 @@ const RepositoryPage = () => {
                     </div>
 
                     {/* Right */}
-                    <Button
-                      onClick={() => handleConnect(repo)} 
-                      disabled={localConnectingId === repo.id || repo.isConnected}
-                      className={`md:self-center cursor-pointer ${
-                        repo.isConnected ? "bg-green-500 text-white cursor-default" : ""
-                      }`}
-                    >
-                      {
-                        repo.isConnected ? "Connected" : localConnectingId === repo.id
-                        ? "Connecting..."
-                        : "Connect"
-                      }
-                      {}
-                    </Button>
+                    {repo.isConnected ? (
+                      <div className="md:self-center bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-4 py-2 flex items-center gap-2 font-medium rounded-lg text-sm select-none shadow-sm shadow-emerald-500/5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        Connected
+                      </div>
+                    ) : (
+                      <Button
+                        onClick={() => handleConnect(repo)}
+                        disabled={localConnectingId === repo.id}
+                        className="md:self-center cursor-pointer font-medium px-5 py-2 rounded-lg text-sm transition-all"
+                      >
+                        {localConnectingId === repo.id ? "Connecting..." : "Connect"}
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
