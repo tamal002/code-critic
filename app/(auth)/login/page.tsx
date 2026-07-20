@@ -1,15 +1,17 @@
+import { Suspense } from "react";
 import LoginUI from "@/app/module/auth/components/login-ui"
 import { requireUnAuth } from "@/app/module/auth/utils/auth-utils"
 
-
-const page = async () => {
-
+async function AuthGate() {
   await requireUnAuth();
+  return <LoginUI />;
+}
 
+const page = () => {
   return (
-    <div>
-      <LoginUI />
-    </div>
+    <Suspense fallback={null}>
+      <AuthGate />
+    </Suspense>
   )
 }
 

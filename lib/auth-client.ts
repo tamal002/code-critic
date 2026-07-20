@@ -1,8 +1,10 @@
+import { polarClient } from "@polar-sh/better-auth"
 import { createAuthClient } from "better-auth/react"
 
 
 
-export const {signIn, signOut, signUp, useSession} = createAuthClient({
-    /** The base URL of the server (optional if you're using the same domain) */
+export const {signIn, signOut, signUp, useSession, checkout, customer} = createAuthClient({
+    
     baseURL: process.env.BETTER_AUTH_URL as string,
+    plugins : [polarClient()]
 })

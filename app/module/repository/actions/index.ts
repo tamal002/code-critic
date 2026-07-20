@@ -6,6 +6,7 @@ import {headers} from "next/headers";
 import { getRespositories } from "../../github/lib/github";
 import { createWebhook } from "../../github/lib/github";
 import { inngestClient } from "@/inngest/client";
+import { canConnectRepository, incrementRepositoryCount } from "../../payment/lib/subscription";
 
 
 // Fetch repositories with connection status
@@ -54,7 +55,11 @@ export const connectRepository = async (owner: string, repo: string, githubId: b
         throw new Error("unauthenticated");
     }
 
-    // TODO: check if user can connect more repositories
+    // check if user can connect more repositories
+    const canConnect = await canConnectRepository(session.user.id);
+    if(!canConnect){
+        throw new Error(`Repository connection limit reached. Please upgrade your subscription or disconnect an existing repository.`);
+    }
 
     // Create webhook on GitHub
     const webhook = await createWebhook(owner, repo);
@@ -69,10 +74,11 @@ export const connectRepository = async (owner: string, repo: string, githubId: b
                 url: `https://github.com/${owner}/${repo}`,
                 userId: session.user.id
             }
-        })
-    }
+        }).catch(async (err) => console.log("Error creating repository in database:", err));
+    
 
-    // TODO:  INFUTURE JUST INCREMENT THE CONNECTED REPO COUNT FOR THE USAGE TRACKING
+    // INCREMENT THE CONNECTED REPO COUNT FOR THE USAGE TRACKING
+    await incrementRepositoryCount(session.user.id);
     
     // DONE: TRIGGER REPOSITORY INDEXING FOR RAG (FIRE AND FORGET)
     try {
@@ -89,6 +95,7 @@ export const connectRepository = async (owner: string, repo: string, githubId: b
     } catch (error) {
         console.error("Failed to send inngest event:", error);
     }
+}
 
     return webhook;
 }

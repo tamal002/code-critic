@@ -3,6 +3,7 @@
 import prisma from "@/lib/db";
 import { getPullrequestDiff } from "../../github/lib/github";
 import { inngestClient } from "@/inngest/client";
+import { canCreateReview, incrementReviewCount } from "../../payment/lib/subscription";
 
 // Review a pull request using AI
 export async function reviewPullRequest(
@@ -40,7 +41,11 @@ export async function reviewPullRequest(
 repository.`);
 
 
-        const githubAccount = repository.user.accounts[0];
+  const canRevie = await canCreateReview(repository.user.id, repository.id);
+  if(!canRevie){
+    throw new Error(`Review limit reached for user. Please upgrade your subscription or wait until the limit resets.`);
+  }
+  const githubAccount = repository.user.accounts[0];
   if (!githubAccount?.accessToken)
     throw new Error(
       `No GitHub account linked for user. Please reconnect your GitHub account.`,
@@ -61,6 +66,9 @@ repository.`);
             userId: repository.user.id,
         }
     });
+
+    // Increment the review count for the user and repository
+    await incrementReviewCount(repository.user.id, repository.id);
 
     return {success: true, message: "Review queued"};
 

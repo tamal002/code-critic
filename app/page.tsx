@@ -1,9 +1,17 @@
-import { Button } from "@/components/ui/button";
-import {requireAuth} from "@/app/module/auth/utils/auth-utils";
-// import LogoutButton from "@/app/module/auth/components/logoutButton";
-import {redirect} from "next/navigation";
+import { Suspense } from "react";
+import { requireAuth } from "@/app/module/auth/utils/auth-utils";
+import { redirect } from "next/navigation";
 
-export default async function Home() {
+async function AuthGate() {
   await requireAuth();
-  return redirect('/dashboard');
+  redirect("/dashboard");
+  return null;
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={null}>
+      <AuthGate />
+    </Suspense>
+  );
 }
