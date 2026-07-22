@@ -11,11 +11,12 @@ export const auth = betterAuth({
         provider: "postgresql", 
     }),
 
-    baseURL: process.env.NEXT_PUBLIC_APP_BASE_URL || process.env.BETTER_AUTH_URL || "http://localhost:3000",
+    baseURL: process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_BASE_URL || "http://localhost:3000",
     trustedOrigins: [
-    "http://localhost:3000",
-    "https://mannered-matilda-incongrously.ngrok-free.dev",
-  ],
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+      process.env.NEXT_PUBLIC_APP_BASE_URL,
+    ].filter(Boolean) as string[],
 
     socialProviders: { 
     github: { 
@@ -33,11 +34,11 @@ export const auth = betterAuth({
                 checkout({
                     products: [
                         {
-                            productId: "990fd738-6693-4a26-98ee-e495ffa20f92",
+                            productId: process.env.POLAR_PRODUCT_ID || "990fd738-6693-4a26-98ee-e495ffa20f92",
                             slug: "codecritic" 
                         }
                     ],
-                    successUrl: process.env.POLAR_SUCCESS_URL,
+                    successUrl: process.env.POLAR_SUCCESS_URL || "/dashboard/subscription?success=true",
                     authenticatedUsersOnly: true
                 }),
 
@@ -53,12 +54,12 @@ export const auth = betterAuth({
                   
                   onSubscriptionActive: async (payload) => {
                     // extracting customerId from payload
-                    const cutomerId = payload.data.customerId;
+                    const customerId = payload.data.customerId;
 
                     // getting user using the polar customerId
                     const user = await prisma.user.findUnique({
                       where : {
-                        polarCustomerId: cutomerId
+                        polarCustomerId: customerId
                       }
                     });
 
@@ -72,12 +73,12 @@ export const auth = betterAuth({
 
                   onSubscriptionCanceled: async (payload) => {
                     // extracting customerId from payload
-                    const cutomerId = payload.data.customerId;
+                    const customerId = payload.data.customerId;
 
                     // getting user using the polar customerId
                     const user = await prisma.user.findUnique({
                       where : {
-                        polarCustomerId: cutomerId
+                        polarCustomerId: customerId
                       }
                     });
 
@@ -90,12 +91,12 @@ export const auth = betterAuth({
 
                   onSubscriptionRevoked: async (payload) => {
                     // extracting customerId from payload
-                    const cutomerId = payload.data.customerId;
+                    const customerId = payload.data.customerId;
 
                     // getting user using the polar customerId
                     const user = await prisma.user.findUnique({
                       where : {
-                        polarCustomerId: cutomerId
+                        polarCustomerId: customerId
                       }
                     });
 
@@ -108,12 +109,14 @@ export const auth = betterAuth({
 
                   onOrderPaid: async (payload) => {
                     // extracting customerId from payload
-                    const cutomerId = payload.data.customerId;
+                    const customerId = payload.data.customerId;
+
+                    if (!customerId) return;
 
                     // getting user using the polar customerId
                     const user = await prisma.user.findUnique({
                       where : {
-                        polarCustomerId: cutomerId
+                        polarCustomerId: customerId
                       }
                     });
 
@@ -125,9 +128,11 @@ export const auth = betterAuth({
                   },
 
                   onCustomerCreated: async (payload) => {
+                    if (!payload.data.email) return;
+
                     const user = await prisma.user.findUnique({
                       where: {
-                        email: payload.data.email!
+                        email: payload.data.email
                       }
                     });
 

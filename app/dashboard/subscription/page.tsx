@@ -31,7 +31,7 @@ import { cn } from "@/lib/utils";
 
 const PLAN_FEATURES = {
   free: [
-    { name: "Up to 5 repositories", included: true },
+    { name: "Up to 3 repositories", included: true },
     { name: "Up to 5 reviews per repository", included: true },
     { name: "Basic code reviews", included: true },
     { name: "Community support", included: true },
@@ -49,8 +49,8 @@ const PLAN_FEATURES = {
 } as const;
 
 const PLAN_PRICING = {
-  monthly: "$19",
-  yearly: "$190",
+  monthly: "$0",
+  proMonthly: "$19.99",
 };
 
 export default function SubscriptionPage() {
@@ -434,7 +434,7 @@ export default function SubscriptionPage() {
                   </CardDescription>
                 </div>
                 <Badge className="border-amber-500/30 bg-amber-500/15 text-amber-600 dark:text-amber-400">
-                  {PLAN_PRICING.yearly} / year
+                  {PLAN_PRICING.proMonthly} / month
                 </Badge>
               </div>
             </CardHeader>

@@ -46,8 +46,8 @@ export async function getUserTier(userId: string) : Promise<SubscriptionTier> {
         select: { subscriptionTier: true },
     });
 
-    // return the subscription tier, defaulting to "FREE" if not set
-    return (user?.subscriptionTier as SubscriptionTier) || "FREE";
+    // return the subscription tier, defaulting to "free" if not set
+    return (user?.subscriptionTier as SubscriptionTier) || "free";
 }
 
 

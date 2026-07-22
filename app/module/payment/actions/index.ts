@@ -105,7 +105,7 @@ export async function syncSubscriptionStatus() {
         const subscriptions = result.result?.items || [];
 
         // Find the most relevant subscription (active or most recent)
-        const activeSub = subscriptions.find((sub: any) => sub.status === 'actived');
+        const activeSub = subscriptions.find((sub: any) => sub.status === 'active');
         const latestSub = subscriptions[0]; // Assuming API returns sorted or we should sort
 
         if (activeSub) {
@@ -115,8 +115,8 @@ export async function syncSubscriptionStatus() {
             // If latest is canceled/expired
             const status = latestSub.status === 'canceled' ? "cancelled" : "expired";
             // Only downgrade if we are sure it's not active
-            if (latestSub.status !== 'activated') {
-                await updateUserTier(user.id, "free", status);
+            if (latestSub.status !== 'active') {
+                await updateUserTier(user.id, "free", status as any);
             }
             return { success: true, status };
         }
