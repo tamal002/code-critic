@@ -83,21 +83,30 @@ export async function getContributionStats() {
         }
 
         const contributions = calendar.weeks.flatMap((week: any) =>
-            week.contributionDays.map((day: any) => ({
+            week.contributionDays.map((day: any) => {
+              const count = day.contributionCount;
+              let level = 0;
+              if (count > 0 && count <= 2) level = 1;
+              else if (count > 2 && count <= 5) level = 2;
+              else if (count > 5 && count <= 8) level = 3;
+              else if (count > 8) level = 4;
+
+              return {
                 date: day.date,
-                count: day.contributionCount,
-                level: Math.min(4, Math.floor(day.contributionCount / 3)), // Convert to 0-4 scale
-            }))
-        )
+                count: count,
+                level: level,
+              };
+            })
+        );
 
         return {
             contributions,
-            totalContributions:calendar.totalContributions
-        }
+            totalContributions: calendar.totalContributions
+        };
 
     } catch (error) {
-console.error("Error fetching contribution stats:", error);
-    return null;
+        console.error("Error fetching contribution stats:", error);
+        return null;
     }
 }
 
@@ -110,7 +119,7 @@ export const getDashboardStats = async () => {
       headers: await headers(),
     });
 
-    if (!session) {
+    if (!session?.user) {
       throw new Error("unauthenticated");
     }
 
@@ -124,7 +133,7 @@ export const getDashboardStats = async () => {
       auth: githubToken,
     });
 
-    // Fetch GitHub username from the linked account
+    // Fetch GitHub user profile data
     const { data: user } = await octokit.rest.users.getAuthenticated();
     const githubUsername = user.login;
 
@@ -132,14 +141,14 @@ export const getDashboardStats = async () => {
       throw new Error("GitHub username not found");
     }
 
-    // TODO: fetch total connected repos from db
-    const totalRepos = 30; // dummy data
+    // Total repositories on user's GitHub profile (public + private)
+    const totalRepos = (user.public_repos || 0) + (user.total_private_repos || 0);
 
     // Fetch user contribution data
     const calendar = await fetchUserContribution(githubToken, githubUsername);
 
     // Extract total commits from contribution calendar
-    const totalCommits = calendar.totalContributions || 0;
+    const totalCommits = calendar?.totalContributions || 0;
 
     // Fetch total PRs created by the user
     const { data: prs } = await octokit.rest.search.issuesAndPullRequests({
@@ -149,8 +158,12 @@ export const getDashboardStats = async () => {
     // Extract total PRs count
     const totalPRs = prs.total_count || 0;
 
-    // TODO: fetch total reviews from db
-    const totalReviews = 38; // dummy data
+    // Fetch total AI reviews from db
+    const totalReviews = await prisma.review.count({
+      where: {
+        repository: { userId: session.user.id },
+      },
+    });
 
     return {
       totalRepos,
@@ -227,7 +240,7 @@ export const getMonthlyActivity = async () => {
       headers: await headers(),
     });
 
-    if (!session) {
+    if (!session?.user) {
       throw new Error("unauthenticated");
     }
 
@@ -248,9 +261,6 @@ export const getMonthlyActivity = async () => {
     if (!githubUsername) {
       throw new Error("GitHub username not found");
     }
-
-    // TODO: fetch total connected repos from db
-    const totalRepos = 30; // dummy data
 
     // Fetch user contribution data
     const calendar = await fetchUserContribution(githubToken, githubUsername);
@@ -287,22 +297,6 @@ export const getMonthlyActivity = async () => {
     }
 
     // Aggregate commits per month (not considering PRs and reviews for now)
-    /*
-        example: 
-        From calendar data:
-        {
-          January: { commits: 34, prs: 5, reviews: 10 },
-          February: { commits: 20, prs: 3, reviews: 8 },
-          ...
-        }
-        
-        final Monthly Activity:
-        [
-          { name: "January", commits: 34, prs: 5, reviews: 10 },
-            { name: "February", commits: 20, prs: 3, reviews: 8 },
-            ...]
-
-    */
     calendar.weeks.forEach((week: any) => {
       week.contributionDays.forEach((day: any) => {
         const date = new Date(day.date);
@@ -313,30 +307,19 @@ export const getMonthlyActivity = async () => {
       });
     });
 
-    // Fetch reviews from database for last 6 months
+    // Fetch real reviews from database for last 6 months
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-    // TODO: REVIEWS'S REAL DATA
-    const generateSampleReviews = () => {
-      const sampleReviews = [];
-      const now = new Date();
-
-      // Generate random reviews over the past 6 months
-      for (let i = 0; i < 45; i++) {
-        const randomDaysAgo = Math.floor(Math.random() * 180); // Random day in last 6 months
-        const reviewDate = new Date(now);
-        reviewDate.setDate(reviewDate.getDate() - randomDaysAgo);
-
-        sampleReviews.push({
-          createdAt: reviewDate,
-        });
-      }
-
-      return sampleReviews;
-    };
-
-    const reviews = generateSampleReviews();
+    const reviews = await prisma.review.findMany({
+      where: {
+        repository: { userId: session.user.id },
+        createdAt: { gte: sixMonthsAgo },
+      },
+      select: {
+        createdAt: true,
+      },
+    });
 
     reviews.forEach((review) => {
       const monthKey = monthNames[review.createdAt.getMonth()];
