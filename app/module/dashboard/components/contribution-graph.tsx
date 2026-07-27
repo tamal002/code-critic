@@ -25,7 +25,7 @@ export default function ContributionGraph() {
 
   const palette = {
     light: ["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"],
-    dark: ["#161b22", "#0e4429", "#006d32", "#26a641", "#39d353"],
+    dark: ["#161b22", "#14532d", "#15803d", "#22c55e", "#4ade80"],
   };
 
   const currentTheme = theme === "dark" ? palette.dark : palette.light;
@@ -36,11 +36,7 @@ export default function ContributionGraph() {
 
   return (
     <Card className="border-border/80">
-      {/* <CardHeader className="pb-2">
-        <CardTitle>Contribution Graph</CardTitle>
-        <CardDescription>GitHub activity over the last year</CardDescription>
-      </CardHeader> */}
-      <CardContent>
+      <CardContent className="pt-6">
         {isLoading ? (
           <Skeleton className="h-45 w-full" />
         ) : isError ? (
@@ -60,18 +56,19 @@ export default function ContributionGraph() {
               </span>
             </div>
             
-            <div className="ml-10">
-                <ActivityCalendar
-              data={contributions}
-              theme={{ light: palette.light, dark: palette.dark }}
-              blockSize={11}
-              blockMargin={3}
-              fontSize={12}
-              labels={{
-                totalCount: `Total contributions in ${new Date().getFullYear()}`,
-                legend: { less: "Less", more: "More" },
-              }}
-            />
+            <div className="overflow-x-auto pb-2">
+              <ActivityCalendar
+                data={contributions}
+                theme={{ light: palette.light, dark: palette.dark }}
+                blockSize={12}
+                blockMargin={3}
+                fontSize={12}
+                showWeekdayLabels={true}
+                labels={{
+                  totalCount: `Total contributions in ${new Date().getFullYear()}`,
+                  legend: { less: "Less", more: "More" },
+                }}
+              />
             </div>
           </div>
         )}
